@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Resume Builder</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      transition: 0.3s;
+    }
+
+    .container {
+      display: flex;
+      gap: 30px;
+    }
+
+    .form-section {
+      width: 40%;
+    }
+
+    .preview-section {
+      width: 60%;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    input, textarea, select, button {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .dark {
+      background: #0f172a;
+      color: white;
+    }
+
+    .dark .preview-section {
+      background: #1e293b;
+    }
+
+    .light {
+      background: #f4f4f4;
+      color: black;
+    }
+
+    .light .preview-section {
+      background: white;
+    }
+
+    .creative {
+      background: #ffe4e6;
+      color: #222;
+    }
+
+    .creative .preview-section {
+      background: #fff;
+      border-left: 8px solid #ec4899;
+    }
+  </style>
+</head>
+
+<body class="dark">
+
+<h1>AI Resume Builder</h1>
+
+<select onchange="changeTheme(this.value)">
+  <option value="dark">Dark Modern</option>
+  <option value="light">Clean Corporate</option>
+  <option value="creative">Creative Accent</option>
+</select>
+
+<div class="container">
+
+  <div class="form-section">
+    <input id="name" placeholder="Full Name">
+    <input id="email" placeholder="Email">
+    <input id="phone" placeholder="Phone">
+    <input id="location" placeholder="Location">
+    <input id="role" placeholder="Your Role">
+    <input id="years" placeholder="Years of Experience">
+    <textarea id="skills" placeholder="Skills (comma separated)"></textarea>
+
+    <button onclick="generateAbout()">Generate AI About Me</button>
+    <textarea id="about"></textarea>
+
+    <h3>Experience</h3>
+    <div id="experience-container"></div>
+    <button onclick="addExperience()">Add Experience</button>
+
+    <button onclick="downloadPDF()">Download PDF</button>
+  </div>
+
+  <div class="preview-section" id="resume-preview">
+    <h2 id="preview-name"></h2>
+    <p id="preview-contact"></p>
+    <h3>About Me</h3>
+    <p id="preview-about"></p>
+    <h3>Skills</h3>
+    <p id="preview-skills"></p>
+    <h3>Experience</h3>
+    <div id="preview-experience"></div>
+  </div>
+
+</div>
+
+<script>
+
+function changeTheme(theme) {
+  document.body.className = theme;
+}
+
+function addExperience() {
+  const container = document.getElementById("experience-container");
+  const div = document.createElement("div");
+  div.innerHTML = `
+    <input placeholder="Company">
+    <input placeholder="Position">
+    <input placeholder="Duration">
+    <textarea placeholder="Description"></textarea>
+  `;
+  container.appendChild(div);
+}
+
+function generateAbout() {
+  const role = document.getElementById("role").value;
+  const years = document.getElementById("years").value;
+  const skills = document.getElementById("skills").value;
+
+  const variations = [
+    `Results-driven ${role} with ${years} years of experience specializing in ${skills}. Passionate about delivering impactful solutions.`,
+    `Experienced ${role} bringing over ${years} years of expertise in ${skills}. Committed to innovation and excellence.`,
+    `Professional ${role} with ${years} years in the industry, skilled in ${skills}, focused on driving measurable success.`
+  ];
+
+  document.getElementById("about").value =
+    variations[Math.floor(Math.random() * variations.length)];
+}
+
+function updatePreview() {
+  document.getElementById("preview-name").innerText =
+    document.getElementById("name").value;
+
+  document.getElementById("preview-contact").innerText =
+    document.getElementById("email").value + " | " +
+    document.getElementById("phone").value + " | " +
+    document.getElementById("location").value;
+
+  document.getElementById("preview-about").innerText =
+    document.getElementById("about").value;
+
+  document.getElementById("preview-skills").innerText =
+    document.getElementById("skills").value;
+
+  const previewExp = document.getElementById("preview-experience");
+  previewExp.innerHTML = "";
+
+  const experiences = document.getElementById("experience-container").children;
+  for (let exp of experiences) {
+    const inputs = exp.querySelectorAll("input, textarea");
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <strong>${inputs[1].value}</strong> at ${inputs[0].value} (${inputs[2].value})
+      <p>${inputs[3].value}</p>
+    `;
+    previewExp.appendChild(div);
+  }
+}
+
+document.querySelectorAll("input, textarea").forEach(el => {
+  el.addEventListener("input", updatePreview);
+});
+
+async function downloadPDF() {
+  updatePreview();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const element = document.getElementById("resume-preview");
+
+  await html2canvas(element).then(canvas => {
+    const imgData = canvas.toDataURL("image/png");
+    doc.addImage(imgData, "PNG", 10, 10, 190, 0);
+    doc.save("resume.pdf");
+  });
+}
+
+</script>
+
+</body>
+</html>
